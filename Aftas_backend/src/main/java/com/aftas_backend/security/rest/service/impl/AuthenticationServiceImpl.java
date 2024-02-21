@@ -26,7 +26,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         String access_token = jwtTokenService.generateToken(request.getUsername(), TokenType.ACCESS_TOKEN);
-        String refresh_token = jwtTokenService.generateToken(request.getUsername(), TokenType.REFRESH_TOKEN);
+        String refresh_token = jwtTokenService.generateRefreshToken(request.getUsername(), httpServletRequest);
 
         return JwtAuthenticationResponse.builder()
                 .accessToken(access_token)
@@ -54,10 +54,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public JwtAuthenticationResponse getTestToken() {
+    public JwtAuthenticationResponse getTestToken(HttpServletRequest httpServletRequest) {
         return JwtAuthenticationResponse.builder()
                 .accessToken(jwtTokenService.generateToken("1", TokenType.ACCESS_TOKEN))
-                .refreshToken(jwtTokenService.generateToken("1", TokenType.REFRESH_TOKEN))
+                .refreshToken(jwtTokenService.generateRefreshToken("1", httpServletRequest))
                 .build();
     }
 }

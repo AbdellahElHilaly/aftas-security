@@ -14,5 +14,5 @@ public interface AuthenticationService {
 
     void logout(HttpServletRequest httpServletRequest);
 
-    JwtAuthenticationResponse getTestToken();
+    JwtAuthenticationResponse getTestToken(HttpServletRequest httpServletRequest);
 }

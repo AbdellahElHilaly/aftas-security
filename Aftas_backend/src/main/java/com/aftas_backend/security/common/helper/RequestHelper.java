@@ -9,10 +9,27 @@ public class RequestHelper {
     public TokenType getTokenType(HttpServletRequest request) {
         String endpoint = request.getRequestURI();
         if (endpoint.equals("/api/v1/auth/refresh")) {
-            System.out.println("REFRESH_TOKEN");
             return TokenType.REFRESH_TOKEN;
-        };
-        System.out.println("ACCESS_TOKEN");
+        }
         return TokenType.ACCESS_TOKEN;
     }
+
+    public String getUserAgent(HttpServletRequest httpServletRequest) {
+        return httpServletRequest.getHeader("User-Agent");
+    }
+
+    public String getIpAddress(HttpServletRequest httpServletRequest) {
+        return httpServletRequest.getRemoteAddr();
+    }
+
+    public String getJwtTokenIfExist(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            System.out.println(authHeader.replace("Bearer ", ""));
+            return authHeader.replace("Bearer ", "");
+        }
+        return null;
+    }
+
+
 }

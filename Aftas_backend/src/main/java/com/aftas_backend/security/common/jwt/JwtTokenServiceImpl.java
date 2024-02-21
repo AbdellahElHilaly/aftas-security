@@ -1,5 +1,6 @@
 package com.aftas_backend.security.common.jwt;
 
+import com.aftas_backend.security.common.helper.RequestHelper;
 import com.aftas_backend.security.utils.enums.TokenType;
 import com.aftas_backend.security.utils.env.SecurityEnvironment;
 import io.jsonwebtoken.Claims;
@@ -21,6 +22,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     @Value("${jwt.signing.key}")
     private String jwtSigningKey;
+    private final RequestHelper requestHelper;
 
     private final SecurityEnvironment securityEnvironment;
 
@@ -30,20 +32,10 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    @Override
-    public String getJwtTokenIfExist(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.replace("Bearer ", "");
-        }
-        return null;
-    }
 
     @Override
     public Boolean isTokenValid(String token, TokenType tokenType) {
-        return isMachType(token, tokenType) &&
-                isMachSignature(token) &&
-                isTokenExpired(token);
+        return isMachType(token, tokenType) && isMachSignature(token) && isTokenExpired(token);
     }
 
     @Override
@@ -68,30 +60,43 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
 
     @Override
+    public String generateToken(String username, TokenType tokenType) {
+        return Jwts.builder().setSubject(username).claim("type", tokenType.name()).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(securityEnvironment.getTokenExpirationDates().get(tokenType)).signWith(getSecretKey()).compact();
+    }
+
+    @Override
+    public String generateRefreshToken(String username, HttpServletRequest httpServletRequest) {
+        String userAgent = requestHelper.getUserAgent(httpServletRequest);
+        String ipAddress = requestHelper.getIpAddress(httpServletRequest);
+
+        return Jwts.builder().setSubject(username).claim("type", TokenType.REFRESH_TOKEN).claim("userAgent", userAgent).claim("ipAddress", ipAddress).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(securityEnvironment.getTokenExpirationDates().get(TokenType.REFRESH_TOKEN)).signWith(getSecretKey()).compact();
+    }
+
+
+    @Override
     public String extractUsername(String token) {
-        Jws<Claims> jws = Jwts.parserBuilder().setSigningKey(getSecretKey()).build().parseClaimsJws(token);
-        return jws.getBody().getSubject();
+        return claim(token).getBody().getSubject();
     }
 
     @Override
     public TokenType extractTokenType(String token) {
-        Jws<Claims> jws = Jwts.parserBuilder().setSigningKey(getSecretKey()).build().parseClaimsJws(token);
-        return TokenType.valueOf(jws.getBody().get("type", String.class));
+        return TokenType.valueOf(claim(token).getBody().get("type", String.class));
     }
 
     @Override
     public Date extractExpiration(String token) {
-        Jws<Claims> jws = Jwts.parserBuilder().setSigningKey(getSecretKey()).build().parseClaimsJws(token);
-        return jws.getBody().getExpiration();
+        return claim(token).getBody().getExpiration();
+    }
+
+
+    @Override
+    public String extractUserAgent(String token) {
+        return claim(token).getBody().get("userAgent", String.class);
     }
 
     @Override
-    public String generateToken(String username, TokenType tokenType) {
-        return Jwts.builder()
-                .setSubject(username)
-                .claim("type", tokenType.name())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(securityEnvironment.getTokenExpirationDates().get(tokenType))
-                .signWith(getSecretKey()).compact();
+    public String extractIpAddress(String token) {
+        return claim(token).getBody().get("ipAddress", String.class);
     }
+
 }

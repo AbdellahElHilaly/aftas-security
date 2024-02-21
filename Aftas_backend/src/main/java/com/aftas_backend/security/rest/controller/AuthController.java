@@ -30,8 +30,8 @@ public class AuthController {
 
 
     @GetMapping("/token")
-    public JwtAuthenticationResponse testToken() {
-        return authenticationService.getTestToken();
+    public JwtAuthenticationResponse testToken(HttpServletRequest httpServletRequest) {
+        return authenticationService.getTestToken(httpServletRequest);
     }
 
 
