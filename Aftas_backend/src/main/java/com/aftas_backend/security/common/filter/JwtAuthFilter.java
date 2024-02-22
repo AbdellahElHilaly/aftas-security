@@ -33,7 +33,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (requestHelper.getEndPointType(request).equals(EndPointType.ACCESS)) {
+        if (requestHelper.getEndPointType(request).equals(EndPointType.ACCESS)
+                || requestHelper.getEndPointType(request).equals(EndPointType.AUTH)
+        ) {
 
             String jwtToken = requestHelper.getJwtTokenIfExist(request);
 

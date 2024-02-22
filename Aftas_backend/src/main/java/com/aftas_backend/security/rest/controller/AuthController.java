@@ -1,5 +1,6 @@
 package com.aftas_backend.security.rest.controller;
 
+import com.aftas_backend.security.common.principal.UserPrincipal;
 import com.aftas_backend.security.common.principal.UserPrincipalService;
 import com.aftas_backend.security.rest.dto.request.LoginRequest;
 import com.aftas_backend.security.rest.dto.response.JwtAuthenticationResponse;
@@ -8,11 +9,13 @@ import com.aftas_backend.security.rest.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Collection;
 
 @RestController
@@ -36,22 +39,22 @@ public class AuthController {
     }
 
 
+    //for test
     @GetMapping("/token")
     public JwtAuthenticationResponse testToken(HttpServletRequest httpServletRequest) {
         return authenticationService.getTestToken(httpServletRequest);
     }
 
-
+    //for test
     @GetMapping("/roles")
     public Collection<? extends GrantedAuthority> getRoles() {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities();
     }
 
-
+    //for test
     @GetMapping("/principal")
-    public UserDetails getPrincipal() {
-        //todo: the principal is not stored in context holder
-        return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public UserPrincipal getPrincipal() {
+        return userPrincipalService.getUserPrincipalFromContextHolder();
     }
 
 
