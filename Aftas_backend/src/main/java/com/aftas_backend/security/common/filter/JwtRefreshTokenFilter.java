@@ -69,6 +69,7 @@ public class JwtRefreshTokenFilter extends OncePerRequestFilter {
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
     }
+
     private void validateRefreshToken(String jwtToken, HttpServletRequest request) {
         checkUserAgent(jwtToken, request);
         checkIpAddress(jwtToken, request);
@@ -81,7 +82,6 @@ public class JwtRefreshTokenFilter extends OncePerRequestFilter {
         if (!memberRepository.existsByNumber(Integer.valueOf(jwtTokenService.extractUsername(jwtToken)))) {
             throw new RuntimeException("Invalid user");
         }
-
     }
 
     private void checkIpAddress(String jwtToken, HttpServletRequest request) {

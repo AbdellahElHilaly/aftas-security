@@ -3,13 +3,12 @@ package com.aftas_backend.services.impl;
 import com.aftas_backend.handlers.exceptionHandler.OperationException;
 import com.aftas_backend.handlers.exceptionHandler.ResourceNotFoundException;
 import com.aftas_backend.models.entities.Member;
+import com.aftas_backend.models.enums.Roles;
 import com.aftas_backend.repositories.MemberRepository;
 import com.aftas_backend.services.MemberService;
 import com.github.javafaker.Faker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +36,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Member createMember(Member member) {
+    public Member createMember(Member member, Roles adherent) {
 
         if (memberRepository.findByNumber(member.getNumber()).isPresent()) {
             throw new OperationException("Member Number already exists");

@@ -2,6 +2,7 @@ package com.aftas_backend.web.rest.controllers;
 
 import com.aftas_backend.handlers.response.ResponseMessage;
 import com.aftas_backend.models.entities.Member;
+import com.aftas_backend.models.enums.Roles;
 import com.aftas_backend.security.common.principal.UserPrincipal;
 import com.aftas_backend.security.common.principal.UserPrincipalService;
 import com.aftas_backend.services.MemberService;
@@ -39,12 +40,31 @@ public class MemberController {
     }
 
     @PreAuthorize(value = "hasRole('MANAGER')")
-    @PostMapping()
-    public ResponseEntity createMember(@Valid @RequestBody MemberRequestVM memberVM) {
-        Member createdMember = memberService.createMember(memberVM.toMember());
+    @PostMapping("/adherent")
+    public ResponseEntity createAdherent(@Valid @RequestBody MemberRequestVM memberVM) {
+        Member createdMember = memberService.createMember(memberVM.toMember(), Roles.ADHERENT);
         MemberResponseVM memberResponseVM = MemberResponseVM.fromMember(createdMember);
         return ResponseMessage.created(memberResponseVM, "Member created successfully");
     }
+
+
+    @PreAuthorize(value = "hasRole('MANAGER')")
+    @PostMapping("/manager")
+    public ResponseEntity createManager(@Valid @RequestBody MemberRequestVM memberVM) {
+        Member createdMember = memberService.createMember(memberVM.toMember(), Roles.MANAGER);
+        MemberResponseVM memberResponseVM = MemberResponseVM.fromMember(createdMember);
+        return ResponseMessage.created(memberResponseVM, "Member created successfully");
+    }
+
+
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
+    @PostMapping("/jury")
+    public ResponseEntity createJury(@Valid @RequestBody MemberRequestVM memberVM) {
+        Member createdMember = memberService.createMember(memberVM.toMember(), Roles.JURY);
+        MemberResponseVM memberResponseVM = MemberResponseVM.fromMember(createdMember);
+        return ResponseMessage.created(memberResponseVM, "Member created successfully");
+    }
+
 
     @PreAuthorize(value = "hasRole('MANAGER')")
     @GetMapping("/number/{number}")
@@ -53,6 +73,7 @@ public class MemberController {
         MemberResponseVM memberResponseVM = MemberResponseVM.fromMember(member);
         return ResponseMessage.ok(memberResponseVM, "Member retrieved successfully");
     }
+
 
     @PreAuthorize(value = "hasRole('MANAGER')")
     @PutMapping("/{number}")
