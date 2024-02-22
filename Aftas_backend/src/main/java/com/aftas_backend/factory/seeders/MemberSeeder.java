@@ -2,6 +2,7 @@ package com.aftas_backend.factory.seeders;
 
 import com.aftas_backend.factory.fakers.MemberFaker;
 import com.aftas_backend.models.entities.Member;
+import com.aftas_backend.models.enums.Roles;
 import com.aftas_backend.repositories.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,19 +20,31 @@ public class MemberSeeder {
 
     public void seed(Integer count) {
         List<Member> members = new  ArrayList<>();
-        members.add(getAdmin());
+        members.add(getAdminManager());
+        members.add(getJuryMember());
         for (int i = 0; i < count; i++) {
             members.add(memberFaker.makeMember());
         }
         memberRepository.saveAll(members);
     }
 
-    private Member getAdmin() {
+    private Member getJuryMember() {
+        return Member.builder()
+                .number(2)
+                .firstName("member")
+                .lastName("member")
+                .role(String.valueOf(Roles.JURY))
+                .password(passwordEncoder.encode("123456"))
+                .build();
+    }
+
+    private Member getAdminManager() {
         return Member.builder()
                 .number(1)
-                .firstName("Admin")
-                .lastName("Admin")
-                .password(passwordEncoder.encode("admin"))
+                .firstName("manager")
+                .lastName("manager")
+                .role(String.valueOf(Roles.MANAGER))
+                .password(passwordEncoder.encode("123456"))
                 .build();
     }
 }

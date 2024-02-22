@@ -3,6 +3,7 @@ package com.aftas_backend.security.common.filter;
 import com.aftas_backend.security.common.helper.RequestHelper;
 import com.aftas_backend.security.common.jwt.JwtTokenService;
 import com.aftas_backend.security.common.principal.UserPrincipalService;
+import com.aftas_backend.security.utils.enums.EndPointType;
 import com.aftas_backend.security.utils.enums.TokenType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -32,23 +33,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String jwtToken = requestHelper.getJwtTokenIfExist(request);
+        if (requestHelper.getEndPointType(request).equals(EndPointType.ACCESS)) {
+
+            String jwtToken = requestHelper.getJwtTokenIfExist(request);
+
+            if (jwtToken == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
 
+            if (!jwtTokenService.isTokenValid(jwtToken, TokenType.ACCESS_TOKEN)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-        if (jwtToken == null) {
-            filterChain.doFilter(request, response);
-            return;
+            String username = jwtTokenService.extractUsername(jwtToken);
+            setAuthentication(userPrincipalService.loadUserByUsername(username), request);
         }
 
-        if (!jwtTokenService.isTokenValid(jwtToken, requestHelper.getTokenType(request))) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String username = jwtTokenService.extractUsername(jwtToken);
-
-        setAuthentication(userPrincipalService.loadUserByUsername(username), request);
 
         filterChain.doFilter(request, response);
 

@@ -1,6 +1,7 @@
 package com.aftas_backend.models.entities;
 
 import com.aftas_backend.models.enums.IdentityDocumentType;
+import com.aftas_backend.models.enums.Roles;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,8 @@ public class Member {
     private IdentityDocumentType identityDocumentType;
 
     private String identityNumber;
+
+    private String role;
 
 
     @OneToMany(mappedBy = "member")

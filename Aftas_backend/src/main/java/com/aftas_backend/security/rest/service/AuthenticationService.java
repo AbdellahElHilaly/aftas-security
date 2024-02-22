@@ -10,7 +10,7 @@ public interface AuthenticationService {
 
     JwtAuthenticationResponse login(LoginRequest request, HttpServletRequest httpServletRequest);
 
-    JwtRefreshTokenResponse refresh(HttpServletRequest httpServletRequest);
+    JwtRefreshTokenResponse refresh();
 
     void logout(HttpServletRequest httpServletRequest);
 

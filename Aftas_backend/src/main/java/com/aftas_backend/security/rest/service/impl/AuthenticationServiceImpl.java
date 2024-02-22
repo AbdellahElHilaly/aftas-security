@@ -1,6 +1,7 @@
 package com.aftas_backend.security.rest.service.impl;
 
 import com.aftas_backend.security.common.jwt.JwtTokenService;
+import com.aftas_backend.security.common.principal.UserPrincipalService;
 import com.aftas_backend.security.rest.dto.request.LoginRequest;
 import com.aftas_backend.security.rest.dto.response.JwtAuthenticationResponse;
 import com.aftas_backend.security.rest.dto.response.JwtRefreshTokenResponse;
@@ -20,6 +21,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JwtTokenService jwtTokenService;
     private final AuthenticationManager authenticationManager;
+    private final UserPrincipalService userPrincipalService;
 
     @Override
     public JwtAuthenticationResponse login(LoginRequest request, HttpServletRequest httpServletRequest) {
@@ -35,17 +37,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public JwtRefreshTokenResponse refresh(HttpServletRequest httpServletRequest) {
-        return null;
-//        String token = jwtTokenService.getJwtTokenIfExist(httpServletRequest);
-//        if (token == null) {
-//            throw new RuntimeException("Refresh token is required");
-//        }
-//        String username = jwtTokenService.extractUsername(token);
-//        return JwtRefreshTokenResponse.builder()
-//
-//                .accessToken(jwtTokenService.generateToken(username, TokenType.ACCESS_TOKEN))
-//                .build();
+    public JwtRefreshTokenResponse refresh() {
+        String username =  userPrincipalService.getUserPrincipalFromContextHolder().getUsername();
+       return  JwtRefreshTokenResponse.builder()
+               .accessToken(jwtTokenService.generateToken(username, TokenType.ACCESS_TOKEN))
+               .build();
     }
 
     @Override

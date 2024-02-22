@@ -3,6 +3,8 @@ package com.aftas_backend.security.common.principal;
 import com.aftas_backend.models.entities.Member;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +16,7 @@ public class UserPrincipal extends Member implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return AuthorityUtils.createAuthorityList("ROLE_" + getRole());
     }
 
     @Override
@@ -45,6 +47,7 @@ public class UserPrincipal extends Member implements UserDetails {
     public void setMember(@NotNull Member member) {
         setFirstName(member.getFirstName());
         setLastName(member.getLastName());
+        setRole(member.getRole());
         setNumber(member.getNumber());
         setPassword(member.getPassword());
     }

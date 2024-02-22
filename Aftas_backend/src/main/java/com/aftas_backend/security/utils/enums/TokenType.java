@@ -1,5 +1,5 @@
 package com.aftas_backend.security.utils.enums;
 
 public enum TokenType {
-    ACCESS_TOKEN, REFRESH_TOKEN
+    ACCESS_TOKEN, UNKNOWN, REFRESH_TOKEN
 }
