@@ -36,24 +36,25 @@ public class MemberSeeder {
                 .number(1)
                 .firstName("abdellah")
                 .lastName("el hilaly")
-                .role(String.valueOf(Roles.MANAGER))
+                .role(Roles.MANAGER)
                 .password(passwordEncoder.encode("123456"))
                 .nationality(faker.address().country())
                 .identityDocumentType(IdentityDocumentType.CIN)
                 .identityNumber(faker.number().digits(8))
+                .isMemberActivated(true)
                 .build();
     }
-
     private Member getJuryMember() {
         return Member.builder()
                 .number(2)
                 .firstName("karim")
                 .lastName("el oumari")
-                .role(String.valueOf(Roles.JURY))
+                .role(Roles.JURY)
                 .password(passwordEncoder.encode("123456"))
                 .nationality(faker.address().country())
                 .identityDocumentType(IdentityDocumentType.CIN)
                 .identityNumber(faker.number().digits(8))
+                .isMemberActivated(true)
                 .build();
     }
 

@@ -6,7 +6,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class MainSeeder implements CommandLineRunner {
+public class
+MainSeeder implements CommandLineRunner {
     private final CompetitionSeeder competitionSeeder;
     private final FishSeeder fishSeeder;
     private final MemberSeeder memberSeeder;

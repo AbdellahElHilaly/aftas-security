@@ -9,7 +9,6 @@ import com.aftas_backend.repositories.RankingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,14 +18,11 @@ public class RankingSeeder {
     private final RankingRepository rankingRepository;
     private final MemberRepository memberRepository;
     private final CompetitionRepository competitionRepository;
-
-
     public void seed() {
         Competition todayCompetition = competitionRepository.findAllByDateEquals(LocalDate.now(), PageRequest.of(0, 1)).getContent().get(0);
 
         List<Member> member = memberRepository.findAll();
         for (Member value : member) {
-
             rankingRepository.save(Ranking.builder()
                     .competition(todayCompetition)
                     .member(value)
@@ -34,8 +30,5 @@ public class RankingSeeder {
                     .score((double) 0)
                     .build());
         }
-
     }
-
-
 }

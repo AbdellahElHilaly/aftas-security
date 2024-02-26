@@ -1,6 +1,8 @@
 package com.aftas_backend.security.common.filter;
 
 import com.aftas_backend.repositories.MemberRepository;
+import com.aftas_backend.security.common.exception.CustomAccessDeniedHandler;
+import com.aftas_backend.security.common.exception.CustomAuthenticationEntryPoint;
 import com.aftas_backend.security.common.helper.RequestHelper;
 import com.aftas_backend.security.common.jwt.JwtTokenService;
 import com.aftas_backend.security.common.principal.UserPrincipalService;
@@ -11,7 +13,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,43 +32,42 @@ public class JwtRefreshTokenFilter extends OncePerRequestFilter {
     private final RequestHelper requestHelper;
     private final MemberRepository memberRepository;
     private final UserPrincipalService userPrincipalService;
-
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        try {
+            if (requestHelper.getEndPointType(request).equals(EndPointType.REFRESH)) {
+                String jwtToken = requestHelper.getJwtTokenIfExist(request);
+                if (jwtToken == null) {
+                    throw new RuntimeException("Refresh token is required");
+                }
 
-        if (requestHelper.getEndPointType(request).equals(EndPointType.REFRESH)) {
+                if (!jwtTokenService.isTokenValid(jwtToken, TokenType.REFRESH_TOKEN)) {
+                    throw new RuntimeException("Invalid token");
+                }
 
-            String jwtToken = requestHelper.getJwtTokenIfExist(request);
+                validateRefreshToken(jwtToken, request);
 
-            if (jwtToken == null) {
-                throw new RuntimeException("Refresh token is required");
+                String username = jwtTokenService.extractUsername(jwtToken);
+                setAuthentication(userPrincipalService.loadUserByUsername(username), request);
             }
 
-            if (!jwtTokenService.isTokenValid(jwtToken, TokenType.REFRESH_TOKEN)) {
-                throw new RuntimeException("Invalid token");
-            }
-
-            validateRefreshToken(jwtToken, request);
-
-            String username = jwtTokenService.extractUsername(jwtToken);
-            setAuthentication(userPrincipalService.loadUserByUsername(username), request);
+            filterChain.doFilter(request, response);
+        } catch (AccessDeniedException e) {
+            customAccessDeniedHandler.handle(request, response, e);
+        } catch (RuntimeException e) {
+            customAccessDeniedHandler.handle(request, response, new AccessDeniedException(e.getMessage()));
         }
-
-        filterChain.doFilter(request, response);
-
     }
 
     private void setAuthentication(UserDetails userDetails, HttpServletRequest request) {
-
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
 
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
         SecurityContextHolder.getContext().setAuthentication(authToken);
     }
 
@@ -74,8 +75,6 @@ public class JwtRefreshTokenFilter extends OncePerRequestFilter {
         checkUserAgent(jwtToken, request);
         checkIpAddress(jwtToken, request);
         checkUser(jwtToken, request);
-
-
     }
 
     private void checkUser(String jwtToken, HttpServletRequest request) {

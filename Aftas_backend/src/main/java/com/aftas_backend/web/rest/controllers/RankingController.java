@@ -1,8 +1,10 @@
 package com.aftas_backend.web.rest.controllers;
 
 import com.aftas_backend.handlers.response.ResponseMessage;
+import com.aftas_backend.models.entities.Competition;
 import com.aftas_backend.models.entities.Ranking;
 import com.aftas_backend.services.RankingService;
+import com.aftas_backend.web.rest.vms.competition.CompetitionResponseVM;
 import com.aftas_backend.web.rest.vms.ranking.RankingRequestCreateVM;
 import com.aftas_backend.web.rest.vms.ranking.RankingResponseVM;
 import jakarta.validation.Valid;
@@ -35,7 +37,7 @@ public class RankingController {
         return ResponseMessage.ok(rankingResponseVMS, "Rankings retrieved successfully");
     }
 
-    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY') or hasRole('ADHERENT')")
     @GetMapping("/competition/{code}")
     public ResponseEntity getAllRankingsByCompetition(@ParameterObject Pageable pageable, @PathVariable String code) {
         List<Ranking> rankings = rankingService.getAllRankingsByCompetitionCode(pageable, code);
@@ -81,13 +83,23 @@ public class RankingController {
 
     @GetMapping("/my-competitions")
     public ResponseEntity getMyCompetitions(@ParameterObject Pageable pageable) {
-        List<Ranking> rankings = rankingService.getMyCompetitions(pageable);
-        List<RankingResponseVM> rankingResponseVMS = new ArrayList<>();
-        for (Ranking ranking : rankings) {
-            rankingResponseVMS.add(RankingResponseVM.fromRanking(ranking));
+        List<Competition> comps = rankingService.getMyCompetitions(pageable);
+        List<CompetitionResponseVM> competitionResponseVMS = new ArrayList<>();
+        for (Competition competition : comps) {
+            competitionResponseVMS.add(CompetitionResponseVM.fromCompetition(competition));
         }
-        return ResponseMessage.ok(rankingResponseVMS, "Rankings retrieved successfully");
+        return ResponseMessage.ok(competitionResponseVMS, "your competitions retrieved successfully");
 
+    }
+
+    @GetMapping("/my-today-competitions")
+    public ResponseEntity getMyTodayCompetitions(@ParameterObject Pageable pageable) {
+        List<Competition> comps = rankingService.getMyTodayCompetitions(pageable);
+        List<CompetitionResponseVM> competitionResponseVMS = new ArrayList<>();
+        for (Competition competition : comps) {
+            competitionResponseVMS.add(CompetitionResponseVM.fromCompetition(competition));
+        }
+        return ResponseMessage.ok(competitionResponseVMS, "your today competition retrieved successfully");
     }
 
 

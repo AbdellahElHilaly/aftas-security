@@ -27,8 +27,8 @@ public class CompetitionFaker {
                     .description(faker.lorem().sentence())
                     .maxParticipants(faker.number().randomDigit())
                     .location(faker.address().city())
-                    .startTime(LocalDateTime.now().toLocalTime())
-                    .endTime(LocalDateTime.now().toLocalTime().plusHours(4))
+                    .startTime(LocalDateTime.now().minusHours(4).toLocalTime())
+                    .endTime(LocalDateTime.now().toLocalTime().plusHours(2))
                     .date(LocalDate.now())
                     .build();
         }

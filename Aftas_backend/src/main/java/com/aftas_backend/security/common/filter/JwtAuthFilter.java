@@ -1,5 +1,7 @@
 package com.aftas_backend.security.common.filter;
 
+import com.aftas_backend.security.common.exception.CustomAccessDeniedHandler;
+import com.aftas_backend.security.common.exception.CustomAuthenticationEntryPoint;
 import com.aftas_backend.security.common.helper.RequestHelper;
 import com.aftas_backend.security.common.jwt.JwtTokenService;
 import com.aftas_backend.security.common.principal.UserPrincipalService;
@@ -11,7 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -19,7 +23,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -27,40 +30,42 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtTokenService jwtTokenService;
     private final RequestHelper requestHelper;
     private final UserPrincipalService userPrincipalService;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (requestHelper.getEndPointType(request).equals(EndPointType.ACCESS)
-                || requestHelper.getEndPointType(request).equals(EndPointType.AUTH)
-        ) {
+        try {
+            if (requestHelper.getEndPointType(request).equals(EndPointType.ACCESS)
+                    || requestHelper.getEndPointType(request).equals(EndPointType.AUTH)) {
 
-            String jwtToken = requestHelper.getJwtTokenIfExist(request);
+                String jwtToken = requestHelper.getJwtTokenIfExist(request);
 
-            if (jwtToken == null) {
-                filterChain.doFilter(request, response);
-                return;
+                if (jwtToken == null) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                if (!jwtTokenService.isTokenValid(jwtToken, TokenType.ACCESS_TOKEN)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                String username = jwtTokenService.extractUsername(jwtToken);
+                setAuthentication(userPrincipalService.loadUserByUsername(username), request);
             }
 
-
-            if (!jwtTokenService.isTokenValid(jwtToken, TokenType.ACCESS_TOKEN)) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            String username = jwtTokenService.extractUsername(jwtToken);
-            setAuthentication(userPrincipalService.loadUserByUsername(username), request);
+            filterChain.doFilter(request, response);
+        } catch (AccessDeniedException e) {
+            customAccessDeniedHandler.handle(request, response, e);
+        } catch (AuthenticationException e) {
+            customAuthenticationEntryPoint.commence(request, response, e);
         }
-
-
-        filterChain.doFilter(request, response);
-
     }
 
     private void setAuthentication(UserDetails userDetails, HttpServletRequest request) {
-
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
 
@@ -68,6 +73,4 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
     }
-
-
 }

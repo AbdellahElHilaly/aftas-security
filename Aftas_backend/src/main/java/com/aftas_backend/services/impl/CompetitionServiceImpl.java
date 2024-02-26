@@ -42,7 +42,6 @@ public class CompetitionServiceImpl implements CompetitionService {
     public Competition getCompetitionById(String code) {
         return competitionRepository.findById(code).orElseThrow(() -> new ResourceNotFoundException("Competition not found"));
     }
-
     @Override
     public Competition createCompetition(Competition competition) {
         competition.setStartTime(LocalTime.of(8, 00, 0));

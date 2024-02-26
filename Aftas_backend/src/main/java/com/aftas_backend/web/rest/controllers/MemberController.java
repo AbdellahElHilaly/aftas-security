@@ -28,7 +28,7 @@ public class MemberController {
     private final UserPrincipalService userPrincipalService;
 
 
-    @PreAuthorize(value = "hasRole('MANAGER')")
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
     @GetMapping
     public ResponseEntity getAllMembers(@ParameterObject Pageable pageable, @RequestParam(required = false, name = "search") String search) {
         List<Member> members = memberService.getAllMembers(pageable, search);
@@ -39,7 +39,7 @@ public class MemberController {
         return ResponseMessage.ok(memberResponseVMS, "Members retrieved successfully");
     }
 
-    @PreAuthorize(value = "hasRole('MANAGER')")
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
     @PostMapping("/adherent")
     public ResponseEntity createAdherent(@Valid @RequestBody MemberRequestVM memberVM) {
         Member createdMember = memberService.createMember(memberVM.toMember(), Roles.ADHERENT);
@@ -57,7 +57,7 @@ public class MemberController {
     }
 
 
-    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
+    @PreAuthorize(value = "hasRole('MANAGER')")
     @PostMapping("/jury")
     public ResponseEntity createJury(@Valid @RequestBody MemberRequestVM memberVM) {
         Member createdMember = memberService.createMember(memberVM.toMember(), Roles.JURY);
@@ -66,7 +66,7 @@ public class MemberController {
     }
 
 
-    @PreAuthorize(value = "hasRole('MANAGER')")
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
     @GetMapping("/number/{number}")
     public ResponseEntity getMemberByNumber(@PathVariable Integer number) {
         Member member = memberService.getMemberByNumber(number);
@@ -75,7 +75,7 @@ public class MemberController {
     }
 
 
-    @PreAuthorize(value = "hasRole('MANAGER')")
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
     @PutMapping("/{number}")
     public ResponseEntity updateMember(@Valid @PathVariable Integer number, @RequestBody MemberRequestUpdateVM memberVM) {
         Member updatedMember = memberService.updateMember(memberVM.toMember(), number);
@@ -83,24 +83,29 @@ public class MemberController {
         return ResponseMessage.ok(memberResponseVM, "Member updated successfully");
     }
 
-    @PreAuthorize(value = "hasRole('MANAGER')")
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
     @DeleteMapping("/{number}")
     public ResponseEntity deleteMember(@PathVariable Integer number) {
         memberService.deleteMember(number);
         return ResponseMessage.ok(null, "Member deleted successfully");
     }
 
-    @PreAuthorize(value = "hasRole('MANAGER')")
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
     @GetMapping("/count")
     public ResponseEntity countMembers() {
         Long count = memberService.countMembers();
         return ResponseMessage.ok(count, "Members counted successfully");
     }
 
-
     @GetMapping("/me")
     public UserPrincipal getMe() {
         return userPrincipalService.getUserPrincipalFromContextHolder();
+    }
+    @PreAuthorize(value = "hasRole('MANAGER')")
+    @PutMapping("/activate/{number}")
+    public ResponseEntity activateMember(@PathVariable Integer number) {
+        memberService.activateMember(number);
+        return ResponseMessage.ok(null, "Member activated successfully");
     }
 
 

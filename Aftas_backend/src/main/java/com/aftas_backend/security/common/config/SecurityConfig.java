@@ -1,5 +1,7 @@
 package com.aftas_backend.security.common.config;
 
+import com.aftas_backend.security.common.exception.CustomAccessDeniedHandler;
+import com.aftas_backend.security.common.exception.CustomAuthenticationEntryPoint;
 import com.aftas_backend.security.common.filter.JwtAuthFilter;
 import com.aftas_backend.security.common.filter.JwtRefreshTokenFilter;
 import com.aftas_backend.security.common.principal.UserPrincipalService;
@@ -34,26 +36,25 @@ public class SecurityConfig {
     private final JwtRefreshTokenFilter jwtRefreshTokenFilter;
     private final PasswordEncoder passwordEncoder;
     private final UserPrincipalService userPrincipalService;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
                 .csrf(AbstractHttpConfigurer::disable)
-
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/v1/auth/**")
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/token")
                         .permitAll().anyRequest().authenticated()
                 )
-
-
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
-
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtRefreshTokenFilter, JwtAuthFilter.class);
-
+                .addFilterBefore(jwtRefreshTokenFilter, JwtAuthFilter.class)
+                .exceptionHandling(config -> config
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                        .authenticationEntryPoint(customAuthenticationEntryPoint));
 
         return http.build();
     }

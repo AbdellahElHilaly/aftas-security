@@ -3,15 +3,18 @@ package com.aftas_backend.web.rest.controllers;
 import com.aftas_backend.handlers.exceptionHandler.OperationException;
 import com.aftas_backend.handlers.response.ResponseMessage;
 import com.aftas_backend.models.entities.Competition;
+import com.aftas_backend.security.common.principal.UserPrincipal;
+import com.aftas_backend.security.common.principal.UserPrincipalService;
 import com.aftas_backend.services.CompetitionService;
 import com.aftas_backend.web.rest.vms.competition.CompetitionRequestVM;
 import com.aftas_backend.web.rest.vms.competition.CompetitionResponseVM;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -20,12 +23,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/competitions")
+@RequiredArgsConstructor
 public class CompetitionController {
-    private CompetitionService competitionService;
+    private final CompetitionService competitionService;
+    private final UserPrincipalService userPrincipalService;
 
-    public CompetitionController(CompetitionService competitionService) {
-        this.competitionService = competitionService;
-    }
+
 
 
     @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
@@ -49,14 +52,22 @@ public class CompetitionController {
         return ResponseMessage.created(competitionResponseVM, "Competition created successfully");
     }
 
-    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY') or hasRole('ADHERENT')")
     @GetMapping("/{id}")
     public ResponseEntity getCompetitionById(@PathVariable String id) {
         Competition competition = competitionService.getCompetitionById(id);
         CompetitionResponseVM competitionResponseVM = CompetitionResponseVM.fromCompetition(competition);
         return ResponseMessage.ok(competitionResponseVM, "Competition retrieved successfully");
     }
-
+    @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY') or hasRole('ADHERENT')")
+    @GetMapping("/my-competition/{id}")
+    public ResponseEntity getMyCompetitionById(@PathVariable String id) {
+        Competition competition = competitionService.getCompetitionById(id);
+        UserPrincipal user  = userPrincipalService.getUserPrincipalFromContextHolder();
+        competition.getRankings().stream().filter(ranking -> ranking.getMember().getNumber().equals(user.getNumber())).findFirst().orElseThrow(() -> new OperationException("You are not allowed to access this competition"));
+        CompetitionResponseVM competitionResponseVM = CompetitionResponseVM.fromCompetition(competition);
+        return ResponseMessage.ok(competitionResponseVM, "Competition retrieved successfully");
+    }
     @PreAuthorize(value = "hasRole('MANAGER') or hasRole('JURY')")
     @PutMapping("/{id}")
     public ResponseEntity updateCompetition(@Valid @RequestBody CompetitionRequestVM competitionVM, @PathVariable String id) {

@@ -25,7 +25,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public List<Member> getAllMembers(Pageable pageable, String search) {
         if (search != null) {
-            return memberRepository.findAllByFirstNameOrLastNameOrNumbe(search, pageable).getContent();
+            return memberRepository.findAllByFirstNameOrLastNameOrNumber(search, pageable).getContent();
         }
         return memberRepository.findAll(pageable).getContent();
     }
@@ -41,11 +41,11 @@ public class MemberServiceImpl implements MemberService {
         if (memberRepository.findByNumber(member.getNumber()).isPresent()) {
             throw new OperationException("Member Number already exists");
         }
-
         String password = generatePassword();
         member.setPassword(passwordEncoder.encode(password));
+        member.setRole(adherent);
+        member.setIsMemberActivated(true);
         memberRepository.save(member);
-
         member.setPassword(password);
         return member;
     }
@@ -87,8 +87,14 @@ public class MemberServiceImpl implements MemberService {
 
 
     private String generatePassword() {
-        return "123456";
-//        return faker.numerify("######");
+//        return "123456";
+        return faker.numerify("######");
+    }
+    public Boolean activateMember(Integer number) {
+        Member member = memberRepository.findByNumber(number).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
+        member.setIsMemberActivated(!member.getIsMemberActivated());
+        memberRepository.save(member);
+        return true;
     }
 
 }
