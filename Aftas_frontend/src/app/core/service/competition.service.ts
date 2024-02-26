@@ -26,9 +26,19 @@ public getTodayCompetition(): Observable<any> {
   public getCompetitions():Observable<any>{
     return this.http.get<any>(this.api+"/api/v1/competitions");
   }
+  public getMyCompetitions():Observable<any>{
+    return this.http.get<any>(this.api+"/api/v1/rankings/my-competitions");
+  }
+  public getMyTodayCompetition():Observable<any>{
+    return this.http.get<any>(this.api+"/api/v1/rankings/my-today-competitions");
+  }
   public getCompetition(code:string):Observable<any>{
     return this.http.get<any>(this.api+"/api/v1/competitions/"+code);
   }
+  public getMyCompetitionByCode(code:string):Observable<any>{
+    return this.http.get<any>(this.api+"/api/v1/competitions/my-competition/"+code);
+  }
+
   public getCompetitionsPaginatedSearch(page:number=0,size:number=15,search:string):Observable<any>{
     let query:string = '';
     if(search!=''){
@@ -52,5 +62,15 @@ public getTodayCompetition(): Observable<any> {
   }
   public addHuntingToCompetition(ranking:any):Observable<any>{
     return this.http.post<any>(this.api+"/api/v1/huntings",ranking);
+  }
+  public getMyCompetitionsPaginatedSearch(page:number=0,size:number=15,search:string):Observable<any>{
+    let query:string = '';
+    if(search!=''){
+      query='?page='+page+'&size='+size+'&search='+search;
+    }
+    else{
+      query='?page='+page+'&size='+size;
+    }
+    return this.http.get<any>(this.api+"/api/v1/rankings/my-competitions"+query);
   }
 }

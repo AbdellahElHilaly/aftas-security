@@ -34,7 +34,16 @@ export class MemberService {
     return this.http.get<any>(this.api+"/api/v1/members"+query);
   }
   public addMember(member:any):Observable<any>{
-    return this.http.post<any>(this.api+"/api/v1/members",member);
+    return this.http.post<any>(this.api+"/api/v1/members/adherent",member);
+  }
+  public addJury(member:any):Observable<any>{
+    return this.http.post<any>(this.api+"/api/v1/members/jury",member);
+  }
+  public addManager(member:any):Observable<any>{
+    return this.http.post<any>(this.api+"/api/v1/members/manager",member);
+  }
+  public activateMember(number:string):Observable<any>{
+    return this.http.put<any>(this.api+"/api/v1/members/activate/"+number,{});
   }
 
 }

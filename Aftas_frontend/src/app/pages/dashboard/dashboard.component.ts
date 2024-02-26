@@ -2,6 +2,8 @@ import { Time } from '@angular/common';
 import { Component } from '@angular/core';
 import { CompetitionResp } from 'src/app/core/model/CompetitionResp';
 import { FishResp } from 'src/app/core/model/FishResp';
+import { UserResponseInfo } from 'src/app/core/model/UserResponseInfo';
+import { TokenStorageService } from 'src/app/core/service/TokenStorageService';
 import { CompetitionService } from 'src/app/core/service/competition.service';
 import { FishService } from 'src/app/core/service/fish.service';
 import { LevelService } from 'src/app/core/service/level.service';
@@ -15,17 +17,17 @@ import { RankingService } from 'src/app/core/service/ranking.service';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent {
+  user:UserResponseInfo = {} as UserResponseInfo;
   huntingLoading = false;
   alertMessage = '';
   showAlert = false;
   alertType = '';
-
   addHunting = false;
   count_competitions = -1;
   count_members = -1;
   count_fishes = -1;
   count_levels = -1;
-  loading = true; 
+  loading = true;
   rankingRefresh = false;
   competitions: CompetitionResp[] = [];
   competition: CompetitionResp[] = [];
@@ -40,16 +42,23 @@ export class DashboardComponent {
     private memberService:MemberService,
     private fishService:FishService,
     private levelService:LevelService,
-    private rankingService:RankingService
+    private rankingService:RankingService,
+    private tokenStorageService:TokenStorageService
     ) { }
   ngOnInit() {
+    this.getUserInfo();
+    if(this.user.role=='MANAGER' || this.user.role=='JURY'){
       this.getcompititioncount();
       this.getmembercount();
       this.getfishcount();
       this.getlevelcount();
-      this.getCompetitionToday(); 
       this.getCompetitions();
       this.getFishes();
+      this.getCompetitionToday();
+    }else{
+      this.getMyCompetitions();
+      this.getMyTodayCompetition();
+    }
   }
 
   getcompititioncount(){
@@ -69,7 +78,7 @@ export class DashboardComponent {
       this.count_members=data.data;
       this.checkLoadingComplete();
       },
-      (error:any)=>{ 
+      (error:any)=>{
         console.log(error);
       }
     );
@@ -82,7 +91,7 @@ export class DashboardComponent {
       },
       (error:any)=>{
         console.log(error);
-        
+
       }
     );
   }
@@ -105,13 +114,14 @@ export class DashboardComponent {
       this.count_levels != -1
     ) {
       this.loading = false;
+    }else if(this.user.role=="ADHERENT"){
+      this.loading = false;
     }
   }
   getCompetitionToday(){
     this.competitionService.getTodayCompetition().subscribe(
       (data)=>{
         this.competition=data.data;
-        console.log(this.competition);
       },
       (error:any)=>{
         console.log(error);
@@ -155,6 +165,28 @@ export class DashboardComponent {
       }
     );
   }
+  getMyCompetitions(){
+    this.competitionService.getMyCompetitions().subscribe(
+      (data)=>{
+        this.competitions=data.data;
+        this.checkLoadingComplete();
+      },
+      (error:any)=>{
+        console.log(error);
+      }
+    );
+  }
+  getMyTodayCompetition(){
+    this.competitionService.getMyTodayCompetition().subscribe(
+      (data)=>{
+        this.competition=data.data;
+        this.checkLoadingComplete();
+      },
+      (error:any)=>{
+        console.log(error);
+      }
+    );
+  }
   showAddHunting(){
     this.addHunting=true;
   }
@@ -177,7 +209,7 @@ export class DashboardComponent {
       (error:any)=>{
         this.huntingLoading=false;
         console.log(error);
-        this.showAlertMessage(error.error.message,'danger');  
+        this.showAlertMessage(error.error.message,'danger');
       }
     );
   }
@@ -196,13 +228,16 @@ export class DashboardComponent {
     }
     return true;
   }
-  showAlertMessage(message:string, type:string){ 
+  showAlertMessage(message:string, type:string){
     this.alertType = type;
     this.alertMessage = message;
     this.showAlert = true;
   }
   handleAlertClose(){
     this.showAlert = false;
+  }
+  getUserInfo(){
+    this.user = this.tokenStorageService.getUser();
   }
 
 }
